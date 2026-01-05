@@ -156,9 +156,6 @@ Instead of asking _"Does this look like a real face?"_ (which AI can fake), we a
 ## 👥 Team
 We are a team of engineers passionate about solving the deepfake crisis through physics, not AI.
 ---
-## 📄 License
-MIT License — See [LICENSE](LICENSE) for details.
----
 ## 🔗 Links
 - 📖 [Technical Whitepaper](docs/whitepaper.pdf)
 - 🎥 [Demo Video](https://youtube.com/...)
