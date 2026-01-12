@@ -1,0 +1,127 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "_issuer", "type": "address" },
+      { "name": "_attestationTtl", "type": "uint64" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Attested",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true },
+      { "name": "proofHash", "type": "bytes32", "indexed": false },
+      { "name": "expiresAt", "type": "uint64", "indexed": false },
+      { "name": "confidenceBps", "type": "uint16", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Revoked",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Locked",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Transfer",
+    "inputs": [
+      { "name": "from", "type": "address", "indexed": true },
+      { "name": "to", "type": "address", "indexed": true },
+      { "name": "tokenId", "type": "uint256", "indexed": true }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "mintAttestation",
+    "inputs": [
+      { "name": "user", "type": "address" },
+      { "name": "proofHash", "type": "bytes32" },
+      { "name": "confidenceBps", "type": "uint16" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "verifyAndMint",
+    "inputs": [
+      { "name": "user", "type": "address" },
+      { "name": "proofHash", "type": "bytes32" },
+      { "name": "confidenceBps", "type": "uint16" },
+      { "name": "expiresAt", "type": "uint64" },
+      { "name": "deadline", "type": "uint256" },
+      { "name": "signature", "type": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isHuman",
+    "inputs": [
+      { "name": "user", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tokenIdFor",
+    "inputs": [
+      { "name": "user", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "attestations",
+    "inputs": [
+      { "name": "user", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "issuedAt", "type": "uint64" },
+      { "name": "expiresAt", "type": "uint64" },
+      { "name": "proofHash", "type": "bytes32" },
+      { "name": "confidenceBps", "type": "uint16" },
+      { "name": "issuer", "type": "address" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "DOMAIN_SEPARATOR",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "bytes32" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MINT_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "bytes32" }
+    ],
+    "stateMutability": "view"
+  }
+]

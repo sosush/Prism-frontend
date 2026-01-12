@@ -2,3 +2,14 @@
 __pycache__
 examples
 app/__pycache__
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/foundry.lock
+
+# Local env (never commit keys)
+contracts/.env
+
+# OS / tooling
+.DS_Store

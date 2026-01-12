@@ -9,7 +9,7 @@ import org.web3j.protocol.http.HttpService;
 public class Web3Config {
 
     @Bean
-    public Web3j web3j() {
-        return Web3j.build(new HttpService("https://rpc-amoy.polygon.technology"));
+    public Web3j web3j(@org.springframework.beans.factory.annotation.Value("${web3.rpc.url:https://rpc-amoy.polygon.technology}") String rpcUrl) {
+        return Web3j.build(new HttpService(rpcUrl));
     }
 }

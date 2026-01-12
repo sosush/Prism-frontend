@@ -1,0 +1,57 @@
+{
+  "contract": {
+    "name": "PRISMRegistry",
+    "abiPath": "contracts/artifacts/PRISMRegistry.abi.json",
+    "deployScript": "contracts/script/Deploy.s.sol",
+    "functions": {
+      "adminPaidMint": {
+        "name": "mintAttestation",
+        "inputs": ["address user", "bytes32 proofHash", "uint16 confidenceBps"]
+      },
+      "userPaidMint": {
+        "name": "verifyAndMint",
+        "inputs": [
+          "address user",
+          "bytes32 proofHash",
+          "uint16 confidenceBps",
+          "uint64 expiresAt",
+          "uint256 deadline",
+          "bytes signature"
+        ]
+      },
+      "query": {
+        "name": "isHuman",
+        "inputs": ["address user"],
+        "outputs": ["bool"]
+      }
+    },
+    "notes": [
+      "Token is soulbound: all transfers revert.",
+      "Default policy: cannot renew before expiry.",
+      "tokenId is deterministic: uint256(uint160(user))."
+    ]
+  },
+  "java": {
+    "endpoint": {
+      "path": "/api/verify/human",
+      "responseFields": [
+        "status",
+        "confidenceScore",
+        "blockchainTx",
+        "proofHash",
+        "expiresAtEpochSec",
+        "tokenId"
+      ]
+    },
+    "proofHash": {
+      "algorithm": "sha256",
+      "material": "sessionId:wallet_lowercase:confidenceBps:expiresAtEpochSec"
+    },
+    "env": {
+      "WEB3_WALLET_PRIVATEKEY": "Admin key (server-paid minting)",
+      "WEB3_CONTRACT_ADDRESS": "Deployed PRISMRegistry address",
+      "WEB3_RPC_URL": "RPC URL (defaults to Polygon Amoy)",
+      "PRISM_ATTESTATION_TTLSECONDS": "TTL seconds (default 604800)"
+    }
+  }
+}
