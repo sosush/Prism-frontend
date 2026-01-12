@@ -77,13 +77,14 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.prism.security_core.blockchain.AttestationResult;
 import com.prism.security_core.blockchain.BlockchainService;
 
 @RestController
@@ -100,9 +101,7 @@ public class VerificationController {
     public ResponseEntity<?> verifyHuman(
             @RequestBody VerificationRequest request,
             @RequestHeader(value = "X-API-KEY", required = false) String apiKey,
-            Authentication auth) {
-
-        String username = auth.getName();
+            @RequestParam(value = "force", required = false, defaultValue = "false") boolean force) {
 
         // 1️⃣ API key check
         if (apiKey == null) {
@@ -125,16 +124,22 @@ public class VerificationController {
             return ResponseEntity.status(403).body("Verification Failed");
         }
 
-        // 4️⃣ SUCCESS → BLOCKCHAIN WRITE
+        // 4️⃣ SUCCESS → BLOCKCHAIN ATTESTATION + SBT MINT
         try {
-            String proofData = username + ":" + score + ":" + System.currentTimeMillis();
-            String txHash = blockchainService.storeProof(proofData);
+            AttestationResult att = blockchainService.mintAttestation(
+                    request.getWallet(),
+                    request.getSessionId(),
+                    score,
+                    force);
 
             return ResponseEntity.ok(
                     Map.of(
                             "status", "VERIFIED",
                             "confidenceScore", score,
-                            "blockchainTx", txHash));
+                            "blockchainTx", att.txHash(),
+                            "proofHash", att.proofHashHex(),
+                            "expiresAtEpochSec", att.expiresAtEpochSec(),
+                            "tokenId", att.tokenId().toString()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(
