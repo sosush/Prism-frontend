@@ -55,7 +55,9 @@ def _largest_face_rect(faces) -> Optional[Tuple[int, int, int, int]]:
     return int(x), int(y), int(w), int(h)
 
 
-def _clip_rect(x: int, y: int, w: int, h: int, max_w: int, max_h: int) -> Tuple[int, int, int, int]:
+def _clip_rect(
+    x: int, y: int, w: int, h: int, max_w: int, max_h: int
+) -> Tuple[int, int, int, int]:
     x = max(0, min(x, max_w - 1))
     y = max(0, min(y, max_h - 1))
     w = max(1, min(w, max_w - x))
@@ -63,7 +65,9 @@ def _clip_rect(x: int, y: int, w: int, h: int, max_w: int, max_h: int) -> Tuple[
     return x, y, w, h
 
 
-def _forehead_from_face(face_rect: Tuple[int, int, int, int], frame_w: int, frame_h: int) -> Tuple[int, int, int, int]:
+def _forehead_from_face(
+    face_rect: Tuple[int, int, int, int], frame_w: int, frame_h: int
+) -> Tuple[int, int, int, int]:
     x, y, w, h = face_rect
     # Forehead is roughly the upper-middle band of the face box.
     fx = x + int(0.20 * w)
@@ -82,12 +86,18 @@ def _fallback_forehead(frame_w: int, frame_h: int) -> Tuple[int, int, int, int]:
     return _clip_rect(fx, fy, fw, fh, frame_w, frame_h)
 
 
-def _draw_label(img, text: str, org: Tuple[int, int], color: Tuple[int, int, int]) -> None:
-    cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 0), 3, cv2.LINE_AA)
+def _draw_label(
+    img, text: str, org: Tuple[int, int], color: Tuple[int, int, int]
+) -> None:
+    cv2.putText(
+        img, text, org, cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 0), 3, cv2.LINE_AA
+    )
     cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, 0.65, color, 1, cv2.LINE_AA)
 
 
-def _paste_letterboxed(dst: np.ndarray, src: np.ndarray, x: int, y: int, w: int, h: int) -> Tuple[int, int, int, int]:
+def _paste_letterboxed(
+    dst: np.ndarray, src: np.ndarray, x: int, y: int, w: int, h: int
+) -> Tuple[int, int, int, int]:
     """Paste src into dst[x:x+w, y:y+h] keeping aspect ratio (letterboxed)."""
     if w <= 0 or h <= 0:
         return x, y, 0, 0
@@ -108,9 +118,13 @@ def main() -> int:
     engine = PrismEngine()
     state = TestState(last_change_ts=time.time())
 
-    cascade_path = os.path.join(os.path.dirname(cv2.__file__), "data", "haarcascade_frontalface_default.xml")
+    cascade_path = os.path.join(
+        os.path.dirname(cv2.__file__), "data", "haarcascade_frontalface_default.xml"
+    )
     face_cascade = cv2.CascadeClassifier(cascade_path)
-    eye_cascade_path = os.path.join(os.path.dirname(cv2.__file__), "data", "haarcascade_eye.xml")
+    eye_cascade_path = os.path.join(
+        os.path.dirname(cv2.__file__), "data", "haarcascade_eye.xml"
+    )
     eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 
     cap = cv2.VideoCapture(state.camera_index)
@@ -125,6 +139,7 @@ def main() -> int:
         "PRISM Test Harness\n"
         "Keys: q quit | c cycle color | 1 RED | 2 BLUE | 3 GREEN | 4 WHITE | space toggle auto-cycle\n"
         "      f toggle fullscreen | s reset engine buffers\n"
+        "HUD: shows rPPG method, quality gate, temporal xcorr\n"
     )
 
     try:
@@ -152,7 +167,9 @@ def main() -> int:
 
             # Face detection -> forehead ROI
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(120, 120))
+            faces = face_cascade.detectMultiScale(
+                gray, scaleFactor=1.1, minNeighbors=5, minSize=(120, 120)
+            )
             face_rect = _largest_face_rect(faces)
             if face_rect is not None:
                 x, y, fw, fh = face_rect
@@ -162,9 +179,17 @@ def main() -> int:
                 # Eye detection inside face ROI (upper half is usually enough)
                 face_gray = gray[y : y + fh, x : x + fw]
                 upper = face_gray[0 : max(1, int(0.65 * fh)), :]
-                eyes = eye_cascade.detectMultiScale(upper, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-                for (ex, ey, ew, eh) in eyes[:4]:
-                    cv2.rectangle(frame, (x + ex, y + ey), (x + ex + ew, y + ey + eh), (255, 180, 0), 2)
+                eyes = eye_cascade.detectMultiScale(
+                    upper, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+                )
+                for ex, ey, ew, eh in eyes[:4]:
+                    cv2.rectangle(
+                        frame,
+                        (x + ex, y + ey),
+                        (x + ex + ew, y + ey + eh),
+                        (255, 180, 0),
+                        2,
+                    )
             else:
                 fx, fy, fww, fhh = _fallback_forehead(w, h)
                 eyes = []
@@ -173,7 +198,9 @@ def main() -> int:
             forehead = frame[fy : fy + fhh, fx : fx + fww]
 
             # Run the engine with the *current* screen color
-            result = engine.process_frame(forehead, frame, state.screen_color, timestamp_ms=now * 1000.0)
+            result = engine.process_frame(
+                forehead, frame, state.screen_color, timestamp_ms=now * 1000.0
+            )
 
             # Compose a larger single window with stimulus as the FULL background.
             # This maximizes colored light hitting the face.
@@ -187,7 +214,13 @@ def main() -> int:
             cam_y = margin
             cam_w = int(out_w * 0.68)
             cam_h = out_h - 2 * margin
-            cv2.rectangle(display, (cam_x - 2, cam_y - 2), (cam_x + cam_w + 2, cam_y + cam_h + 2), (30, 30, 30), 2)
+            cv2.rectangle(
+                display,
+                (cam_x - 2, cam_y - 2),
+                (cam_x + cam_w + 2, cam_y + cam_h + 2),
+                (30, 30, 30),
+                2,
+            )
             _paste_letterboxed(display, frame, cam_x, cam_y, cam_w, cam_h)
 
             # Forehead ROI thumbnail in the bottom-right corner
@@ -195,15 +228,32 @@ def main() -> int:
             roi_w = int(out_w * 0.26)
             roi_x = out_w - roi_w - margin
             roi_y = out_h - roi_h - margin
-            cv2.rectangle(display, (roi_x - 2, roi_y - 2), (roi_x + roi_w + 2, roi_y + roi_h + 2), (30, 30, 30), 2)
+            cv2.rectangle(
+                display,
+                (roi_x - 2, roi_y - 2),
+                (roi_x + roi_w + 2, roi_y + roi_h + 2),
+                (30, 30, 30),
+                2,
+            )
             if forehead.size > 0:
-                roi_thumb = cv2.resize(forehead, (roi_w, roi_h), interpolation=cv2.INTER_AREA)
+                roi_thumb = cv2.resize(
+                    forehead, (roi_w, roi_h), interpolation=cv2.INTER_AREA
+                )
                 display[roi_y : roi_y + roi_h, roi_x : roi_x + roi_w] = roi_thumb
-            _draw_label(display, "FOREHEAD ROI", (roi_x + 8, roi_y + 28), (255, 255, 255))
+            _draw_label(
+                display, "FOREHEAD ROI", (roi_x + 8, roi_y + 28), (255, 255, 255)
+            )
 
             # Stimulus label (top-right)
-            stim_text_color = (0, 0, 0) if state.screen_color == "WHITE" else (255, 255, 255)
-            _draw_label(display, f"STIMULUS: {state.screen_color}", (out_w - int(out_w * 0.30), 48), stim_text_color)
+            stim_text_color = (
+                (0, 0, 0) if state.screen_color == "WHITE" else (255, 255, 255)
+            )
+            _draw_label(
+                display,
+                f"STIMULUS: {state.screen_color}",
+                (out_w - int(out_w * 0.30), 48),
+                stim_text_color,
+            )
 
             # Overlay metrics
             ok_color = (80, 220, 80)
@@ -216,29 +266,72 @@ def main() -> int:
             screen_texture = bool(result.details.get("screen_texture_detected", False))
             texture_score = result.details.get("texture_uniformity", 0)
             bpm_std = result.details.get("bpm_stability_std", 0)
+            rppg_method = result.details.get("rppg_method", "GREEN")
+            q_gate = result.details.get("quality_gate", True)
+            q_reason = result.details.get("quality_gate_reason", "")
+            xcorr_delay = result.details.get("temporal_xcorr_delay_ms", 0)
+            xcorr_strength = result.details.get("temporal_xcorr_strength", 0)
+            xcorr_passed = result.details.get("temporal_xcorr_passed", False)
             eyes_count = 0 if face_rect is None else int(len(eyes))
 
-            _draw_label(display, f"ScreenColor: {state.screen_color} | Auto: {state.auto_cycle} | Hold: {state.hold_seconds:.1f}s | FPS: {fps_value:.1f}", (20, 35), (255, 255, 255))
-            _draw_label(display, f"Human: {result.is_human} ({result.confidence}%)", (20, 65), human_color)
-            _draw_label(display, f"BPM: {result.bpm} | Q: {result.signal_quality:.2f} | HRV Ent: {result.hrv_score:.3f} | BPM_std: {bpm_std}", (20, 95), (255, 220, 120))
             _draw_label(
                 display,
-                f"Chroma: {chroma_passed} | Physics(SSS): {physics_passed} | Moire: {moire} | Static: {is_static} | ScreenTex: {screen_texture}",
+                f"ScreenColor: {state.screen_color} | Auto: {state.auto_cycle} | Hold: {state.hold_seconds:.1f}s | FPS: {fps_value:.1f}",
+                (20, 35),
+                (255, 255, 255),
+            )
+            _draw_label(
+                display,
+                f"Human: {result.is_human} ({result.confidence}%)",
+                (20, 65),
+                human_color,
+            )
+            _draw_label(
+                display,
+                f"BPM: {result.bpm} | Q: {result.signal_quality:.2f} | HRV Ent: {result.hrv_score:.3f} | BPM_std: {bpm_std}",
+                (20, 95),
+                (255, 220, 120),
+            )
+            forced_reason = result.details.get("forced_false_reason", "")
+            lighting_unstable = bool(result.details.get("lighting_unstable", False))
+            screen_flicker = bool(result.details.get("screen_flicker_detected", False))
+            flicker_ratio = result.details.get("screen_flicker_ratio", 0)
+            _draw_label(
+                display,
+                f"Chroma: {chroma_passed} | SSS: {physics_passed} | Moire: {moire} | Static: {is_static} | ScreenTex: {screen_texture} | Flicker: {screen_flicker}",
                 (20, 125),
+                (200, 200, 200),
+            )
+            if forced_reason:
+                _draw_label(
+                    display,
+                    f"FORCED FALSE: {forced_reason}",
+                    (20, 245),
+                    (80, 80, 255),
+                )
+            _draw_label(
+                display,
+                f"SSS: {result.details.get('sss_ratio', 0):.3f} | Var%: {result.details.get('signal_variance', 0):.3f} | Texture: {texture_score} | FlickRatio: {flicker_ratio:.2f} | Eyes: {eyes_count}",
+                (20, 155),
                 (200, 200, 200),
             )
             _draw_label(
                 display,
-                f"SSS: {result.details.get('sss_ratio', 0):.3f} | Var%: {result.details.get('signal_variance', 0):.3f} | Texture: {texture_score} | Eyes: {eyes_count}",
-                (20, 155),
-                (200, 200, 200),
+                f"rPPG: {rppg_method} | QGate: {q_gate} ({q_reason}) | XCorr: {xcorr_passed} {xcorr_delay}ms {xcorr_strength}",
+                (20, 215),
+                (180, 180, 255),
             )
 
             # Buffer warmup indicator
             buf_len = len(getattr(engine, "green_signal_buffer", []))
             buf_need = getattr(getattr(engine, "config", None), "buffer_size", 150)
             warmup = "WARMUP" if buf_len < buf_need else "READY"
-            _draw_label(display, f"rPPG buffer: {buf_len}/{buf_need} ({warmup})", (20, 185), (180, 180, 255))
+            _draw_label(
+                display,
+                f"rPPG buffer: {buf_len}/{buf_need} ({warmup})",
+                (20, 185),
+                (180, 180, 255),
+            )
 
             cv2.imshow("Prism Debug", display)
 
@@ -270,7 +363,9 @@ def main() -> int:
                 cv2.setWindowProperty(
                     "Prism Debug",
                     cv2.WND_PROP_FULLSCREEN,
-                    cv2.WINDOW_FULLSCREEN if state.stimulus_fullscreen else cv2.WINDOW_NORMAL,
+                    cv2.WINDOW_FULLSCREEN
+                    if state.stimulus_fullscreen
+                    else cv2.WINDOW_NORMAL,
                 )
 
     except KeyboardInterrupt:
