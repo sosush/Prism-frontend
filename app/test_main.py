@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import time
 from dataclasses import dataclass
 import os
@@ -24,6 +25,7 @@ class TestState:
     last_change_ts: float = 0.0
     stimulus_fullscreen: bool = False
     camera_index: int = 0
+    video_path: Optional[str] = None
 
 
 def _bgr_for_screen_color(screen_color: str) -> Tuple[int, int, int]:
@@ -114,9 +116,30 @@ def _paste_letterboxed(
     return ox, oy, new_w, new_h
 
 
+def _parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="PRISM live test harness")
+    p.add_argument(
+        "--video",
+        default=None,
+        help="Optional path to a video file to use as input instead of a webcam",
+    )
+    p.add_argument(
+        "--camera-index",
+        type=int,
+        default=0,
+        help="Webcam index to use when --video is not provided",
+    )
+    return p.parse_args()
+
+
 def main() -> int:
+    args = _parse_args()
     engine = PrismEngine()
-    state = TestState(last_change_ts=time.time())
+    state = TestState(
+        last_change_ts=time.time(),
+        camera_index=int(args.camera_index),
+        video_path=str(args.video) if args.video else None,
+    )
 
     cascade_path = os.path.join(
         os.path.dirname(cv2.__file__), "data", "haarcascade_frontalface_default.xml"
@@ -127,9 +150,18 @@ def main() -> int:
     )
     eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 
-    cap = cv2.VideoCapture(state.camera_index)
+    if state.video_path:
+        cap = cv2.VideoCapture(state.video_path)
+        source_label = f"VIDEO:{os.path.basename(state.video_path)}"
+    else:
+        cap = cv2.VideoCapture(state.camera_index)
+        source_label = f"CAM:{state.camera_index}"
+
     if not cap.isOpened():
-        print(f"Could not open webcam at index {state.camera_index}.")
+        if state.video_path:
+            print(f"Could not open video: {state.video_path}")
+        else:
+            print(f"Could not open webcam at index {state.camera_index}.")
         return 2
 
     cv2.namedWindow("Prism Debug", cv2.WINDOW_NORMAL)
@@ -276,7 +308,7 @@ def main() -> int:
 
             _draw_label(
                 display,
-                f"ScreenColor: {state.screen_color} | Auto: {state.auto_cycle} | Hold: {state.hold_seconds:.1f}s | FPS: {fps_value:.1f}",
+                f"Src: {source_label} | ScreenColor: {state.screen_color} | Auto: {state.auto_cycle} | Hold: {state.hold_seconds:.1f}s | FPS: {fps_value:.1f}",
                 (20, 35),
                 (255, 255, 255),
             )
