@@ -15,7 +15,7 @@ The World's First Physics-Based Human Verification System
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.x-363636.svg)](https://soliditylang.org)
 [![Base L2](https://img.shields.io/badge/Chain-Base%20L2-0052FF.svg)](https://base.org)
 
-[Read the Whitepaper](WHITEPAPER.md) | [Technical Documentation](PRISM_PROTOCOL.md) | [Pitch Deck](PITCH_DECK.md)
+[Read the Whitepaper](WHITEPAPER.md) | [Technical Documentation](PRISM_PROTOCOL.md) | [Runbook](RUNBOOK.md)
 
 ---
 
@@ -403,6 +403,6 @@ See [RUNBOOK.md](RUNBOOK.md) for complete deployment and integration instruction
 
 ---
 
-[Whitepaper](WHITEPAPER.md) | [Technical Spec](PRISM_PROTOCOL.md) | [Pitch Deck](PITCH_DECK.md) | [Runbook](RUNBOOK.md)
+[Whitepaper](WHITEPAPER.md) | [Technical Spec](PRISM_PROTOCOL.md) | [Runbook](RUNBOOK.md)
 
 </div>
